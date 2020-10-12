@@ -8,9 +8,19 @@ from strategies import *
 #Instantiate Cerebro engine
 cerebro: Cerebro = bt.Cerebro()
 
+#path Microsoft
+msft_history = "CSV/microsoft_prices.csv"
+pred_msft = "CSV/prediction_MSFT.csv"
+# path Google
+goog_history = "CSV/googl_prices.csv"
+pred_goog = "CSV/predict_goog.csv"
+# path Amazon 
+amzn_history = "CSV/amazon_prices.csv"
+pred_goog = "CSV/predict_amzn.csv"
+
 #Set data parameters and add to Cerebro
 data = bt.feeds.YahooFinanceCSVData(
-    dataname='GOOG.csv',
+    dataname=msft_history,
     fromdate=datetime.datetime(2015, 10, 1),
     todate=datetime.datetime(2018, 10, 1),
     reverse=False)

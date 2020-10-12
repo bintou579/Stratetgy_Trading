@@ -2,11 +2,11 @@
 
 
 ![GitHub Logo](/Images/accueille.png) 
-# Arbitrage en Bourse
+# Strategy Trading
 
 Nous avons dans notre porfeuille 3 actions (AMAZON, MICROSOFT et GOOGLE). 
 
-Le But de ce projet est de determiner les bonnes actions à acheter ou à vendre afin de réaliser un gain à court terme.  
+Le But de ce projet est de prédire le prix de fermeture avec le modèle LSTM et d'implémenter une stratégie de trading afin de réaliser un gain. 
 
 ## Collecte data
 Pour ce faire, nous allons collecter les données :
@@ -15,9 +15,9 @@ Pour ce faire, nous allons collecter les données :
 2. les news sur nos 3 sociétés 
 
 
-# Stockage des données dans SQL Server 
+# Stockage des données dans Mongodb 
 
-Nous allons stocker nos données dans SQL Server. 
+Nous allons stocker nos données dans Mongodb. 
 
 
 ## Modèle LSTM 
@@ -33,20 +33,23 @@ Recueillir des news sur nos 3 sociétés en analysant le sentiment de chaque new
  [Cliquez ici](). 
  
 ## Web app
-Nous avons utilisé Flask, pour visualiser l'historiques des prix, la prediction des prix de fermetures. 
+Nous avons utilisé Streamlit, pour visualiser l'historiques des prix, la prediction des prix de fermetures et la stratégie trading. 
 
 ## Local install
+pipreqs
+pip install backtrader
 
+pip install backtrader[plotting]
+    
+L'api backtrader marche qu'avec la version Matplotlib >= 1.4.1. 
 
-### Database configuration (POSTGRESQL)
- 
-Before creating the tables needed for this project, you must create a posgresql database. Then, you can run the following command from the root of the project : 
+## Run streamlit
+streamlit run app.py
 
+## Run backtrader
+python  backtrader
 
-### installer 
-
-
-
+python bt_main.py  
 
 # Team
 
