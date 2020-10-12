@@ -268,7 +268,7 @@ def main():
 
             actual_price = yf.Ticker("AMZN").history(period='1d', start="2020-10-03", end="2020-10-03")
             actual_price = actual_price.Close.values
-            #actual_price = np.array(actual_price)
+            
             st.write('True value = ' + str(actual_price[0]))
         else:
             st.title('Modelling')
@@ -309,7 +309,7 @@ def main():
 
             actual_price = yf.Ticker("GOOG").history(period='1d', start="2020-10-03", end="2020-10-03")
             actual_price = actual_price.Close.values
-            #actual_price = np.array(actual_price)
+            
             st.write('True value = ' + str(actual_price[0]))
            
             
@@ -351,7 +351,7 @@ def main():
                 return st.write('you earn :  ' + str(benef))
          
             else:
-                return st.write('you earn :  ' + str(benef))
+                return st.write('you lost :  ' + str(benef))
             
             
         elif pg == "Amazon":
@@ -381,7 +381,7 @@ def main():
                 return st.write('you earn :  ' + str(benef))
          
             else:
-                return st.write('you earn :  ' + str(benef))
+                return st.write('you lost :  ' + str(benef))
             
             
         else :
@@ -411,7 +411,7 @@ def main():
                 return st.write('you earn :  ' + str(benef))
          
             else:
-                return st.write('you earn :  ' + str(benef))
+                return st.write('you lost :  ' + str(benef))
             
 
 
