@@ -66,15 +66,13 @@ def split_data(df, symbol):
     return x_train, y_train, x_test, y_test, scaler, data, dataset, training_data_len
 
 # strategy
-def moyenne_mobile(symbol, df_price):
-    # 30 jours 
+def moyenne_mobile(symbol, df_price, court, longue):
+  
     SMA30 = pd.DataFrame()
-    SMA30["Close Price"] = df_price["Close"].rolling(30).mean()
-
-    # 100 jours 
+    SMA30["Close Price"] = df_price["Close"].rolling(court).mean()
 
     SMA100 = pd.DataFrame()
-    SMA100["Close Price"] = df_price["Close"].rolling(100).mean()
+    SMA100["Close Price"] = df_price["Close"].rolling(longue).mean()
     
     #Create a new dataframe to store all the datasets
     data =pd.DataFrame()
@@ -82,12 +80,12 @@ def moyenne_mobile(symbol, df_price):
     data['SMA30'] = SMA30["Close Price"]
     data['SMA100'] = SMA100["Close Price"]
    
-    return data, df_price
+    return data, df_price, court, longue
     
 
 
-def signal(data, symbol, df_price):
-    data, df_price = moyenne_mobile(symbol, df_price)
+def signal(data, symbol, df_price, court, longue):
+    data, df_price, court, longue = moyenne_mobile(symbol, df_price, court, longue)
     sigPriceBuy = []
     sigPriceSell= []
     flag = -1
@@ -115,13 +113,13 @@ def signal(data, symbol, df_price):
             
     return(sigPriceBuy,sigPriceSell)
 
-pf = 1000   
 @st.cache
-def porto(data):
+
+def porto(data, nb_action, pf):
     buy_sell = data[(data['Buy_Signal_Price'] > 0) | (data['Sell_Signal_Price'] > 0)]
     sell =buy_sell['Sell_Signal_Price'].sum()
-    buy = buy_sell['Buy_Signal_Price'][:-1].sum()
-    gain_perte = (sell*1.01) - (buy*1.01)
+    buy = buy_sell['Buy_Signal_Price'].sum()
+    gain_perte = ((sell*0.99) - (buy*0.99))* nb_action
     pf_final = pf + gain_perte
     return pf_final
 
@@ -219,6 +217,19 @@ def main():
             st.pyplot()
             st.subheader("Dataframe Prédictions vs. Actual Prices")
             st.dataframe(predict)
+            # Predict le 02/10/2020
+            st.subheader("Prediction of 02/10/2020")
+            X_test, scaler, last_60_days_scaled = predict_price("MSFT", scaler)
+            pred_price = model.predict(X_test)
+            pred_price = scaler.inverse_transform(pred_price)
+            pred_price = pred_price[:,0]
+            st.write('Predict Price closing = ' + str(pred_price[0]))
+
+
+            actual_price = yf.Ticker("MSFT").history(period='1d', start="2020-10-03", end="2020-10-03")
+            actual_price = actual_price.Close.values
+            #actual_price = np.array(actual_price)
+            st.write('True value  = ' + str(actual_price[0]))
         elif pag =='Amazon':
             st.title('Modelling')
             st.subheader("Amazon")
@@ -245,7 +256,20 @@ def main():
             st.pyplot()
             predict2 = pd.read_csv("CSV/predict_amzn.csv")
             st.subheader("Dataframe Prédictions vs. Actual Prices")
-            st.dataframe(predict2)
+            st.dataframe(predict2)        
+            # Predict le 02/10/2020
+            st.subheader("Prediction of 02/10/2020")
+            X_test, scaler, last_60_days_scaled = predict_price("AMZN", scaler)
+            pred_price = model_a.predict(X_test)
+            pred_price = scaler.inverse_transform(pred_price)
+            pred_price = pred_price[:,0]
+            st.write('Predict Price closing  = ' + str(pred_price[0]))
+
+
+            actual_price = yf.Ticker("AMZN").history(period='1d', start="2020-10-03", end="2020-10-03")
+            actual_price = actual_price.Close.values
+            #actual_price = np.array(actual_price)
+            st.write('True value = ' + str(actual_price[0]))
         else:
             st.title('Modelling')
             st.subheader("Google")
@@ -259,7 +283,7 @@ def main():
             st.subheader('Visualize the predicted stock price with original stock price')
             st.markdown("The exact price points from our predicted price is close to the actual price")
             train = data[:training_data_len]
-            valid = data[training_data_len:]u
+            valid = data[training_data_len:]
             valid['Predictions'] = predictions
             plt.figure(figsize=(16, 8))
             plt.title('Prédictions vs. valeurs réeles')
@@ -269,19 +293,43 @@ def main():
             plt.plot(valid[['Close', 'Predictions']])
             plt.legend(['Train', 'Valeurs actuelles', 'Prédictions'], loc='lower right')
             st.pyplot()
+            
             predict3 = pd.read_csv("CSV/predict-goog.csv")
             st.subheader("Dataframe Prédictions vs. Actual Prices")
-            st.dataframe(predict3)
+            st.dataframe(predict3[:-6])
+            st.subheader("Prediction of 02/10/2020")
+            # Predict le 02/10/2020
+            X_test, scaler, last_60_days_scaled= predict_price("GOOG", scaler)
+            model_g = load_model('Modeles/SaveModel/GOOG_model.h5', compile = False)
+            pred_price = model_g.predict(X_test)
+            pred_price = scaler.inverse_transform(pred_price)
+            pred_price = pred_price[:,0]
+            st.write('Predict Price closing  = ' + str(pred_price[0]))
+
+
+            actual_price = yf.Ticker("GOOG").history(period='1d', start="2020-10-03", end="2020-10-03")
+            actual_price = actual_price.Close.values
+            #actual_price = np.array(actual_price)
+            st.write('True value = ' + str(actual_price[0]))
            
             
     else:
         
         st.title("Strategy Trading")
         pg = st.sidebar.selectbox("Choose a company", ['Microsoft', 'Amazon', 'Google'])
+        st.write('Select value of portofolio')
+        pf = st.slider('Portofolio', 1000, 1000000) 
+        st.write('Select number of stock')
+        nb_action = st.slider('Number of stock', 1, 1000)
+        st.write('Select short-term average')
+        court = st.slider('SMA court', 30, 300)
+        st.write('Select long-term average')
+        longue = st.slider('SMA long-term', 100, 1000)
         if pg =='Microsoft':
+            st.subheader("Microsoft")
             msft = get_data("MSFT")
-            data_f, msft = moyenne_mobile("MSFT", msft)
-            signal_f = signal(data_f, "MSFT", msft)
+            data_f, msft, court, longue = moyenne_mobile("MSFT", msft, court, longue)
+            signal_f = signal(data_f, "MSFT", msft, court, longue)
             data_f['Buy_Signal_Price'] = signal_f[0]
             data_f['Sell_Signal_Price']= signal_f[1]
             plt.figure(figsize=(15,5))
@@ -295,13 +343,22 @@ def main():
             plt.ylabel('Close Price of USD ($)')
             plt.legend(loc='upper left', fontsize=10)
             st.pyplot() 
-            pf_final = porto(data_f)
-            st.write(f"Valeur intiale du portefeuille est {pf}")
-            st.write("Valeur finale du portefeuille =  " +  str(pf_final))
+            pf_final_f = round(porto(data_f, nb_action, pf))
+            benef= pf_final_f - pf
+            st.write(f"Portofolio start value {pf}")
+            st.write("Portofolio end value =  " +  str(pf_final_f))
+            if benef>0:
+                return st.write('you earn :  ' + str(benef))
+         
+            else:
+                return st.write('you earn :  ' + str(benef))
+            
+            
         elif pg == "Amazon":
+            st.subheader("Amazon")
             amzn = get_data("AMZN")
-            data_z, amzn = moyenne_mobile("AMZN", amzn)
-            signal_z = signal(data_z, "AMZN", amzn)
+            data_z, amzn, court, longue = moyenne_mobile("AMZN", amzn, court, longue)
+            signal_z = signal(data_z, "AMZN", amzn, court, longue)
             data_z['Buy_Signal_Price'] = signal_z[0]
             data_z['Sell_Signal_Price']= signal_z[1]
             plt.figure(figsize=(15,5))
@@ -311,19 +368,27 @@ def main():
             plt.scatter(data_z.index,data_z['Buy_Signal_Price'], label = 'Buy', marker = '^', color = 'green')
             plt.scatter(data_z.index,data_z['Sell_Signal_Price'], label = 'Sell', marker = 'v', color = 'red')
             plt.title('AMAZON Close Price Data, Buy & Sell Signal')
-            plt.xlabel('Jan 02, 2015 - Jan 31, 2020')
+            plt.xlabel('Octobre 01, 2010 - Octobre 02, 2020')
             plt.ylabel('Close Price of USD ($)')
             plt.legend(loc='upper left', fontsize=10)
             st.pyplot()
 
-            pf_final = porto(data_z)
-            st.write(f"Valeur intiale du portefeuille est {pf}")
-            st.write("Valeur finale du portefeuille =  " +  str(pf_final))
+            pf_final_z = round(porto(data_z, nb_action, pf))
+            benef= pf_final_z - pf
+            st.write(f"Portofolio start value {pf}")
+            st.write("Portofolio end value =  " +  str(pf_final_z))
+            if benef>0:
+                return st.write('you earn :  ' + str(benef))
+         
+            else:
+                return st.write('you earn :  ' + str(benef))
+            
             
         else :
+            st.subheader("Google")
             goog = get_data("GOOG")
-            data_goog, goog = moyenne_mobile("GOOG", goog)
-            signal_g = signal(data_goog, "GOOG", goog)
+            data_goog, goog, court, longue = moyenne_mobile("GOOG", goog, court, longue)
+            signal_g = signal(data_goog,"GOOG", goog, court, longue)
             data_goog['Buy_Signal_Price'] = signal_g[0]
             data_goog['Sell_Signal_Price']= signal_g[1]
             plt.figure(figsize=(15,5))
@@ -338,35 +403,33 @@ def main():
             plt.legend(loc='upper left', fontsize=10)
             st.pyplot()
 
-            pf_final = porto(data_goog)
-            st.write(f"Valeur intiale du portefeuille est {pf}")
-            st.write("Valeur finale du portefeuille =  " +  str(pf_final))
+            pf_final_g = round(porto(data_goog, nb_action, pf))
+            benef= pf_final_g - pf
+            st.write(f"Portofolio start value {pf}")
+            st.write("Portofolio end value =  " +  str(pf_final_g))
+            if benef>0:
+                return st.write('you earn :  ' + str(benef))
+         
+            else:
+                return st.write('you earn :  ' + str(benef))
+            
 
 
+def predict_price(symbol, scaler):
+    
+    df = yf.Ticker(symbol).history(period='1d', start='2020-01-1', end="2020-10-2")
+    new_df = df.filter(['Close'])
+    last_60_days = new_df[-60:].values
+    scaler =  MinMaxScaler()
 
+    last_60_days_scaled = scaler.fit_transform(last_60_days)
+    X_test = []
+    X_test.append(last_60_days_scaled)
+    X_test = np.array(X_test)
+    X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
+   
 
-# def predict_price(symbol):
-#     tickerData = yf.Ticker(symbol)
-#     df = tickerData.history(period='1d', start='2010-10-1', end="2020-9-30")
-#     new_df = df.filter(['Close'])
-#     last_60_days = new_df[-60:].values
-#     scaler =  MinMaxScaler()
-
-#     last_60_days_scaled = scaler.fit_transform(last_60_days)
-#     X_test = []
-#     X_test.append(last_60_days_scaled)
-#     X_test = np.array(X_test)
-#     X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
-#     pred_price = model.predict(X_test)
-#     pred_price = scaler.inverse_transform(pred_price)
-#     st.write('Prix prédit:' + str(pred_price))
-
-
-#     actual_price = tickerData.history(period='1d', start="2020-10-03", end="2020-10-03")
-#     actual_price = actual_price.Close.values
-#     actual_price = np.array(actual_price)
-#     st.write('Prix réel:' + str(actual_price))
-#     return pred_price, actual_price
+    return X_test, scaler, last_60_days_scaled 
 
 
 
