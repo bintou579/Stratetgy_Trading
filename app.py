@@ -118,7 +118,7 @@ def signal(data, symbol, df_price, court, longue):
 def porto(data, nb_action, pf):
     buy_sell = data[(data['Buy_Signal_Price'] > 0) | (data['Sell_Signal_Price'] > 0)]
     sell =buy_sell['Sell_Signal_Price'].sum()
-    buy = buy_sell['Buy_Signal_Price'].sum()
+    buy = buy_sell['Buy_Signal_Price'][:-1].sum()
     gain_perte = ((sell*0.99) - (buy*0.99))* nb_action
     pf_final = pf + gain_perte
     return pf_final
@@ -130,7 +130,7 @@ def main():
 
     if page == 'Homepage':
         st.title("Stock Market Predictions with LSTM")
-        img1 = Image.open("Images/accueille.PNG")
+        img1 = Image.open("Images/accueille.png")
         st.image(img1, use_column_width=True)
         st.subheader("Stock Market for Microsoft, Amazon and Google within the last 10 years 01/10/2010 au 01/10/2020")
         st.markdown("The goal of this project is to predict with the model LSTM the closing stock price and backtest stock trading strategies.")
@@ -228,7 +228,6 @@ def main():
 
             actual_price = yf.Ticker("MSFT").history(period='1d', start="2020-10-03", end="2020-10-03")
             actual_price = actual_price.Close.values
-            #actual_price = np.array(actual_price)
             st.write('True value  = ' + str(actual_price[0]))
         elif pag =='Amazon':
             st.title('Modelling')
@@ -263,12 +262,11 @@ def main():
             pred_price = model_a.predict(X_test)
             pred_price = scaler.inverse_transform(pred_price)
             pred_price = pred_price[:,0]
-            st.write('Predict Price closing  = ' + str(pred_price[0]))
+            st.write('Predict Price closing  = ' + str(pred_price))
 
 
             actual_price = yf.Ticker("AMZN").history(period='1d', start="2020-10-03", end="2020-10-03")
             actual_price = actual_price.Close.values
-            
             st.write('True value = ' + str(actual_price[0]))
         else:
             st.title('Modelling')
@@ -305,11 +303,8 @@ def main():
             pred_price = scaler.inverse_transform(pred_price)
             pred_price = pred_price[:,0]
             st.write('Predict Price closing  = ' + str(pred_price[0]))
-
-
             actual_price = yf.Ticker("GOOG").history(period='1d', start="2020-10-03", end="2020-10-03")
             actual_price = actual_price.Close.values
-            
             st.write('True value = ' + str(actual_price[0]))
            
             
@@ -351,7 +346,7 @@ def main():
                 return st.write('you earn :  ' + str(benef))
          
             else:
-                return st.write('you lost :  ' + str(benef))
+                return st.write('you earn :  ' + str(benef))
             
             
         elif pg == "Amazon":
@@ -381,7 +376,7 @@ def main():
                 return st.write('you earn :  ' + str(benef))
          
             else:
-                return st.write('you lost :  ' + str(benef))
+                return st.write('you earn :  ' + str(benef))
             
             
         else :
@@ -411,7 +406,7 @@ def main():
                 return st.write('you earn :  ' + str(benef))
          
             else:
-                return st.write('you lost :  ' + str(benef))
+                return st.write('you earn :  ' + str(benef))
             
 
 

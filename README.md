@@ -27,21 +27,24 @@ LSTM va nous permettre de faire la  prediction des prix fermermetures.
 
 ## Modèle NLP 
 Recueillir des news sur nos 3 sociétés en analysant le sentiment de chaque news. 
-
-## Heroku Deployment
-
- [Cliquez ici](). 
+ 
  
 ## Web app
 Nous avons utilisé Streamlit, pour visualiser l'historiques des prix, la prediction des prix de fermetures et la stratégie trading. 
 
 ## Local install
 pipreqs
-pip install backtrader
+pip install yfinance
 
-pip install backtrader[plotting]
-    
+pip install backtrader
+   
 L'api backtrader marche qu'avec la version Matplotlib >= 1.4.1. 
+## Docker App 
+docker build -t strategies:latest .
+
+docker run -p 8501:8501 strategies:latest
+
+http://localhost:8501/
 
 ## Run streamlit
 streamlit run app.py
